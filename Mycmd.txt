@@ -1,0 +1,5 @@
+./prpcreate.sh  Prpourdemoinfra2 Prpourinfra.yml Prpourinfra.json
+./create.sh ourdemoinfra3 ourinfra.yml ourinfra.json
+
+aws cloudformation create-stack --stack-name prpinfra --template-body file://Prpourinfra.yml    --parameters file://Prpourinfra.json  --region=us-east-1
+aws cloudformation update-stack --stack-name prpinfra --template-body file://Prpourinfra.yml    --parameters file://Prpourinfra.json  --region=us-east-1
