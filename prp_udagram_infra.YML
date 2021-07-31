@@ -8,7 +8,7 @@ Parameters:
     EnvironmentName:
         Description: Praksh Rajpurohit environment Udacity Udagram Project Environment.
         Type: String
-        Default: PrpUdacityUdagramEnv
+        Default: PrpUdacityUdagramEnv1
     VpcCIDR: 
         Description: Enter the IP range (CIDR notation) for this VPC
         Type: String
@@ -41,12 +41,11 @@ Resources:
             EnableDnsSupport: true 
             EnableDnsHostnames: true
             CidrBlock: !Ref VpcCIDR
-            EnableDnsHostnames: true 
-            Tags: 
+            Tags:
                 - Key: Network
-                Value: Public
-                - Key: Name 
-                Value: !Ref EnvironmentName
+                  Value: Public
+                - Key: Name
+                  Value: !Ref EnvironmentName
 
     InternetGateway:
         Type: AWS::EC2::InternetGateway
@@ -71,10 +70,10 @@ Resources:
             CidrBlock: !Ref PublicSubnet1CIDR
             MapPublicIpOnLaunch: true
             Tags: 
-            - Key: Network
-             Value: Public
-            - Key: Name 
-             Value: !Sub ${EnvironmentName} Public Subnet (AZ1)
+                - Key: Network
+                  Value: Public
+                - Key: Name
+                  Value: !Sub ${EnvironmentName} Public Subnet (AZ1)
 
     PublicSubnet2: 
         Type: AWS::EC2::Subnet
@@ -85,9 +84,9 @@ Resources:
             MapPublicIpOnLaunch: true
             Tags: 
                 - Key: Network
-                 Value: Public
-                - Key: Name 
-                 Value: !Sub ${EnvironmentName} Public Subnet (AZ2)
+                  Value: Public
+                - Key: Name
+                  Value:  !Sub ${EnvironmentName} Public Subnet (AZ2)
 
     PrivateSubnet1: 
         Type: AWS::EC2::Subnet
@@ -98,9 +97,9 @@ Resources:
             MapPublicIpOnLaunch: false
             Tags: 
                 - Key: Network
-                 Value: Private
-                - Key: Name 
-                 Value: !Sub ${EnvironmentName} Private Subnet (AZ1)
+                  Value: Public
+                - Key: Name
+                  Value: !Sub ${EnvironmentName} Private Subnet (AZ1)
 
     PrivateSubnet2: 
         Type: AWS::EC2::Subnet
@@ -111,9 +110,9 @@ Resources:
             MapPublicIpOnLaunch: false
             Tags: 
                 - Key: Network
-                 Value: Private
-                - Key: Name 
-                 Value: !Sub ${EnvironmentName} Private Subnet (AZ2)
+                  Value: Public
+                - Key: Name
+                  Value: !Sub ${EnvironmentName} Private Subnet (AZ2)
                   
     NatGateway1EIP:
         Type: AWS::EC2::EIP
@@ -145,9 +144,9 @@ Resources:
             VpcId: !Ref VPC
             Tags: 
                 - Key: Network
-                 Value: Public
-                - Key: Name 
-                 Value: !Sub ${EnvironmentName} Public Routes
+                  Value: Public
+                - Key: Name
+                  Value:  !Sub ${EnvironmentName} Public Routes
                   
 
     DefaultPublicRoute: 
@@ -280,7 +279,7 @@ Outputs:
         Export:
           Name: !Sub ${EnvironmentName}-PRI2-SN
 
-     SecurityGroupDefault:
+    SecurityGroupDefault:
         Description: The ID of DefaultSecurityGroup
         Value: !GetAtt VPC.DefaultSecurityGroup
         Export:
