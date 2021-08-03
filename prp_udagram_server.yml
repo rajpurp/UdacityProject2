@@ -1,0 +1,311 @@
+Description: >
+    Prakash Rajpurohit from Udacity AWS Colud DevOps Program
+    AWS CloudFormation script for createing a network infrastructure.
+
+
+####### Below are the Parameters ########
+Parameters:
+  EnvironmentName:
+    Description: An environment name that will be prefixed to resource names
+    Type: String
+    Default: UdagramApp
+
+Mappings:
+  WebAppRegion:
+    us-west-2:
+      HVM64: ami-0d1cd67c26f5fca19
+
+############################### Resources #################################
+Resources:
+  SecGroupLB:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: SecGroupLB
+      GroupDescription: It will allow http to our load balancer
+      VpcId:
+        Fn::ImportValue: !Sub '${EnvironmentName}-VPCID'
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+      SecurityGroupEgress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName} SecGroupLB
+
+  SecGroupWebServer:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: SecGroupWebServer
+      GroupDescription: It will allow http to our load balancer
+      VpcId:
+        Fn::ImportValue: !Sub '${EnvironmentName}-VPCID'
+        # healthchecks 80 to 80
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+      SecurityGroupEgress:
+        - IpProtocol: tcp
+          FromPort: 0
+          ToPort: 65535
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName} SecGroupWebServer
+
+  SecGroupWebApp:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: It will allow http to ec2 and SHH access
+      VpcId:
+        Fn::ImportValue: !Sub '${EnvironmentName}-VPCID'
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp:
+            Fn::ImportValue: !Sub ${EnvironmentName}-BASTION1-CIDR
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp:
+            Fn::ImportValue: !Sub ${EnvironmentName}-BASTION2-CIDR
+      SecurityGroupEgress:
+        - IpProtocol: tcp
+          FromPort: 0
+          ToPort: 65535
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName}-WASG
+
+  LaunchConfigWebApp:
+    Type: AWS::AutoScaling::LaunchConfiguration
+    Properties:
+      UserData:
+        Fn::Base64: !Sub |
+          apt-get update -y
+          apt-get install unzip awscli -y
+          apt-get install apache2 -y
+          systemctl start apache2.service
+          sudo rm /var/www/html/index.html
+          sudo aws s3 cp s3://udagram-app-seth/udagram.zip /var/www/html
+          sudo unzip /var/www/html/udagram.zip -d /var/www/html
+          systemctl restart apache2.service
+      IamInstanceProfile:
+        Fn::ImportValue: !Sub '${EnvironmentName}-IAM-NAME'
+      SecurityGroups:
+        - Ref: 'SecGroupWebApp'
+      BlockDeviceMappings:
+        - DeviceName: '/dev/sdk'
+          Ebs:
+            VolumeSize: '10'
+            DeleteOnTermination: true
+            VolumeType: 'gp2'
+      ImageId: !FindInMap [WebAppRegion, !Ref 'AWS::Region', HVM64]
+      InstanceType: t3.small
+
+  AutoScalingGrpWebApp:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      MinSize: 4
+      MaxSize: 4
+      DesiredCapacity: 4
+      VPCZoneIdentifier:
+        - Fn::ImportValue: !Sub '${EnvironmentName}-PRI1-SN'
+        - Fn::ImportValue: !Sub '${EnvironmentName}-PRI2-SN'
+      LaunchConfigurationName: !Ref LaunchConfigWebApp
+      TargetGroupARNs:
+        - Ref: TargetGroupWebApp
+
+  LoadBalWebApp:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Name: udagram
+      Subnets:
+        - Fn::ImportValue: !Sub '${EnvironmentName}-PUB1-SN'
+        - Fn::ImportValue: !Sub '${EnvironmentName}-PUB2-SN'
+      SecurityGroups:
+        - Ref: SecGroupLB
+
+  ListenerWebApp:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref TargetGroupWebApp
+      LoadBalancerArn: !Ref LoadBalWebApp
+      Port: 80
+      Protocol: HTTP
+
+  ListenerRuleWebApp:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      Actions:
+        - Type: forward
+          TargetGroupArn: !Ref TargetGroupWebApp
+      Conditions:
+        - Field: path-pattern
+          Values: [/]
+      ListenerArn: !Ref ListenerWebApp
+      Priority: 1
+
+  TargetGroupWebApp:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckIntervalSeconds: 30
+      HealthCheckPath: /
+      HealthCheckProtocol: HTTP
+      HealthCheckTimeoutSeconds: 15
+      HealthyThresholdCount: 2
+      Port: 80
+      Protocol: HTTP
+      UnhealthyThresholdCount: 5
+      VpcId:
+        Fn::ImportValue:
+          Fn::Sub: '${EnvironmentName}-VPCID'
+
+  ScaleUp:
+    Type: AWS::AutoScaling::ScalingPolicy
+    Properties:
+      AdjustmentType: ChangeInCapacity
+      AutoScalingGroupName: !Ref AutoScalingGrpWebApp
+      Cooldown: 360
+      ScalingAdjustment: 1
+
+  ScaleDown:
+    Type: AWS::AutoScaling::ScalingPolicy
+    Properties:
+      AdjustmentType: ChangeInCapacity
+      AutoScalingGroupName: !Ref AutoScalingGrpWebApp
+      Cooldown: 360
+      ScalingAdjustment: -1
+
+  AlarmCPUHigh:
+    Type: 'AWS::CloudWatch::Alarm'
+    Properties:
+      AlarmName: 'AlarmCPUHigh'
+      AlarmDescription: 'Usage of CPU is greaterthan 75% for 6 minutes.'
+      MetricName: 'CPUUtilization'
+      Namespace: 'AWS/EC2'
+      Statistic: 'Average'
+      Period: '360'
+      EvaluationPeriods: '1'
+      Threshold: '75'
+      ComparisonOperator: 'GreaterThanThreshold'
+      AlarmActions:
+        - Ref: 'ScaleUp'
+      Dimensions:
+        - Name: 'AutoScalingGroupName'
+          Value:
+            Ref: 'AutoScalingGrpWebApp'
+
+  #CloudWatch alerts
+  AlarmCPULow:
+    Type: 'AWS::CloudWatch::Alarm'
+    Properties:
+      AlarmName: 'AlarmCPULow'
+      AlarmDescription: 'Useage of CPU is less than 20% for 6 minutes'
+      MetricName: 'CPUUtilization'
+      Namespace: 'AWS/EC2'
+      Statistic: 'Average'
+      Period: '360'
+      EvaluationPeriods: '1'
+      Threshold: '20'
+      ComparisonOperator: 'GreaterThanThreshold'
+      AlarmActions:
+        - Ref: 'ScaleDown'
+      Dimensions:
+        - Name: 'AutoScalingGroupName'
+          Value:
+            Ref: 'AutoScalingGrpWebApp'
+
+  DistributionCloudF:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Origins:
+          - DomainName: !GetAtt [LoadBalWebApp, DNSName]
+            Id: !GetAtt [LoadBalWebApp, DNSName]
+            CustomOriginConfig:
+              HTTPPort: 80
+              OriginProtocolPolicy: http-only
+        Enabled: 'true'
+        CustomErrorResponses:
+          - ErrorCachingMinTTL: 0
+            ErrorCode: 404
+            ResponseCode: 200
+            ResponsePagePath: '/error.html'
+          - ErrorCachingMinTTL: 0
+            ErrorCode: 403
+            ResponseCode: 200
+            ResponsePagePath: '/error.html'
+        DefaultRootObject: index.html
+        Logging:
+          IncludeCookies: 'false'
+          Bucket:
+            Fn::Join:
+              - ''
+              - - Fn::ImportValue: !Sub ${EnvironmentName}-S3-LOGS
+        Restrictions:
+          GeoRestriction:
+            RestrictionType: none
+            Locations: []
+        DefaultCacheBehavior:
+          AllowedMethods: [HEAD, GET]
+          MinTTL: '0'
+          MaxTTL: '0'
+          DefaultTTL: '0'
+          TargetOriginId: !GetAtt [LoadBalWebApp, DNSName]
+          SmoothStreaming: 'false'
+          ForwardedValues:
+            QueryString: 'true'
+          ViewerProtocolPolicy: allow-all
+        PriceClass: PriceClass_100
+        ViewerCertificate:
+          CloudFrontDefaultCertificate: 'true'
+        WebACLId:
+          Fn::Join:
+            - ''
+            - - Fn::ImportValue: !Sub ${EnvironmentName}-WEBACL
+
+############################### Outputs #################################
+Outputs:
+  MyWebsite:
+    Description: Public DNS for the EC2 Instance
+    Value: !Join ['', ['http://', !GetAtt [LoadBalWebApp, DNSName]]]
+
+  AlarmCPUHigh:
+    Description: 'Cloud Watch will send alarms when EC2 CPU is running High'
+    Value: !Ref 'AlarmCPUHigh'
+
+  AlarmCPULow:
+    Description: 'Cloud Watch will send alarms when EC2 CPU is running Low'
+    Value: !Ref 'AlarmCPULow'
+
+  AutoScalingGrpWebApp:
+    Description: 'Group ID of Auto Scaling Group Reference ID'
+    Value: !Ref 'AutoScalingGrpWebApp'
+
+  ScaleUp:
+    Description: 'Policy ID of Auto Scaling Up'
+    Value: !Ref 'ScaleUp'
+
+  ScaleDown:
+    Description: 'Policy ID of Auto Scaling Down'
+    Value: !Ref 'ScaleDown'
