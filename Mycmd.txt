@@ -1,7 +1,18 @@
-./prpcreate.sh  Prpourdemoinfra2 Prpourinfra.yml Prpourinfra.json
-./create.sh ourdemoinfra3 ourinfra.yml ourinfra.json
+./create.sh PrpUdacityStack prp_udagram_infra.YML  prp_udagram_infra.json
+./update.sh PrpUdacityStack prp_udagram_infra.YML  prp_udagram_infra.json
+./delete.sh PrpUdacityStack 
 
-Hi
+aws cloudformation create-stack --stack-name PrpUdacityStack  --template-body file://prp_udagram_infra.YML    --parameters file://prp_udagram_infra.json  --region=us-west-2
+aws cloudformation update-stack --stack-name PrpUdacityStack  --template-body file://prp_udagram_infra.YML    --parameters file://prp_udagram_infra.json  --region=us-west-2
+aws cloudformation delete-stack --stack-name PrpUdacityStack  --region=us-west-2
 
-aws cloudformation create-stack --stack-name prpinfra --template-body file://Prpourinfra.yml    --parameters file://Prpourinfra.json  --region=us-east-1
-aws cloudformation update-stack --stack-name prpinfra --template-body file://Prpourinfra.yml    --parameters file://Prpourinfra.json  --region=us-east-1
+
+#############################
+
+./create.sh PrpUdacityServer prp_udagram_server.yml  prp_udagram_server.json
+./update.sh PrpUdacityServer prp_udagram_server.yml  prp_udagram_server.json
+./delete.sh PrpUdacityServer 
+
+aws cloudformation create-stack --stack-name PrpUdacityServer  --template-body file://prp_udagram_server.yml    --parameters file://prp_udagram_server.json  --region=us-west-2
+aws cloudformation update-stack --stack-name PrpUdacityServer  --template-body file://prp_udagram_server.yml    --parameters file://prp_udagram_server.json  --region=us-west-2
+aws cloudformation delete-stack --stack-name PrpUdacityServer  --region=us-west-2
