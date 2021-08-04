@@ -78,13 +78,13 @@ Resources:
         - IpProtocol: tcp
           FromPort: 22
           ToPort: 22
-          CidrIp:
-            Fn::ImportValue: !Sub ${EnvironmentName}-BASTION1-CIDR
+          CidrIp: 0.0.0.0/0
+          #  Fn::ImportValue: !Sub ${EnvironmentName}-BASTION1-CIDR
         - IpProtocol: tcp
           FromPort: 22
           ToPort: 22
-          CidrIp:
-            Fn::ImportValue: !Sub ${EnvironmentName}-BASTION2-CIDR
+          CidrIp: 0.0.0.0/0
+          #  Fn::ImportValue: !Sub ${EnvironmentName}-BASTION2-CIDR
       SecurityGroupEgress:
         - IpProtocol: tcp
           FromPort: 0
@@ -93,7 +93,7 @@ Resources:
       Tags:
         - Key: Name
           Value: !Sub ${EnvironmentName}-WASG
-
+          
   LaunchConfigWebApp:
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
@@ -107,6 +107,7 @@ Resources:
           sudo aws s3 cp s3://udagram-app-seth/udagram.zip /var/www/html
           sudo unzip /var/www/html/udagram.zip -d /var/www/html
           systemctl restart apache2.service
+          echo "Udacity Demo Web Server Up and Running!" > index.html
       IamInstanceProfile:
         Fn::ImportValue: !Sub '${EnvironmentName}-IAM-NAME'
       SecurityGroups:
@@ -133,6 +134,21 @@ Resources:
       TargetGroupARNs:
         - Ref: TargetGroupWebApp
 
+  TargetGroupWebApp:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckIntervalSeconds: 30
+      HealthCheckPath: /
+      HealthCheckProtocol: HTTP
+      HealthCheckTimeoutSeconds: 15
+      HealthyThresholdCount: 2
+      Port: 80
+      Protocol: HTTP
+      UnhealthyThresholdCount: 5
+      VpcId:
+        Fn::ImportValue:
+          Fn::Sub: '${EnvironmentName}-VPCID'
+          
   LoadBalWebApp:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
     Properties:
@@ -142,7 +158,8 @@ Resources:
         - Fn::ImportValue: !Sub '${EnvironmentName}-PUB2-SN'
       SecurityGroups:
         - Ref: SecGroupLB
-
+        
+        
   ListenerWebApp:
     Type: AWS::ElasticLoadBalancingV2::Listener
     Properties:
@@ -165,20 +182,11 @@ Resources:
       ListenerArn: !Ref ListenerWebApp
       Priority: 1
 
-  TargetGroupWebApp:
-    Type: AWS::ElasticLoadBalancingV2::TargetGroup
-    Properties:
-      HealthCheckIntervalSeconds: 30
-      HealthCheckPath: /
-      HealthCheckProtocol: HTTP
-      HealthCheckTimeoutSeconds: 15
-      HealthyThresholdCount: 2
-      Port: 80
-      Protocol: HTTP
-      UnhealthyThresholdCount: 5
-      VpcId:
-        Fn::ImportValue:
-          Fn::Sub: '${EnvironmentName}-VPCID'
+
+          ##############################
+
+
+
 
   ScaleUp:
     Type: AWS::AutoScaling::ScalingPolicy
@@ -235,54 +243,6 @@ Resources:
           Value:
             Ref: 'AutoScalingGrpWebApp'
 
-  DistributionCloudF:
-    Type: AWS::CloudFront::Distribution
-    Properties:
-      DistributionConfig:
-        Origins:
-          - DomainName: !GetAtt [LoadBalWebApp, DNSName]
-            Id: !GetAtt [LoadBalWebApp, DNSName]
-            CustomOriginConfig:
-              HTTPPort: 80
-              OriginProtocolPolicy: http-only
-        Enabled: 'true'
-        CustomErrorResponses:
-          - ErrorCachingMinTTL: 0
-            ErrorCode: 404
-            ResponseCode: 200
-            ResponsePagePath: '/error.html'
-          - ErrorCachingMinTTL: 0
-            ErrorCode: 403
-            ResponseCode: 200
-            ResponsePagePath: '/error.html'
-        DefaultRootObject: index.html
-        Logging:
-          IncludeCookies: 'false'
-          Bucket:
-            Fn::Join:
-              - ''
-              - - Fn::ImportValue: !Sub ${EnvironmentName}-S3-LOGS
-        Restrictions:
-          GeoRestriction:
-            RestrictionType: none
-            Locations: []
-        DefaultCacheBehavior:
-          AllowedMethods: [HEAD, GET]
-          MinTTL: '0'
-          MaxTTL: '0'
-          DefaultTTL: '0'
-          TargetOriginId: !GetAtt [LoadBalWebApp, DNSName]
-          SmoothStreaming: 'false'
-          ForwardedValues:
-            QueryString: 'true'
-          ViewerProtocolPolicy: allow-all
-        PriceClass: PriceClass_100
-        ViewerCertificate:
-          CloudFrontDefaultCertificate: 'true'
-        WebACLId:
-          Fn::Join:
-            - ''
-            - - Fn::ImportValue: !Sub ${EnvironmentName}-WEBACL
 
 ############################### Outputs #################################
 Outputs:
@@ -309,3 +269,4 @@ Outputs:
   ScaleDown:
     Description: 'Policy ID of Auto Scaling Down'
     Value: !Ref 'ScaleDown'
+

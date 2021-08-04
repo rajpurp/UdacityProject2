@@ -13,6 +13,26 @@ aws cloudformation delete-stack --stack-name PrpUdacityStack  --region=us-west-2
 ./update.sh PrpUdacityServer prp_udagram_server.yml  prp_udagram_server.json
 ./delete.sh PrpUdacityServer 
 
-aws cloudformation create-stack --stack-name PrpUdacityServer  --template-body file://prp_udagram_server.yml    --parameters file://prp_udagram_server.json  --region=us-west-2
-aws cloudformation update-stack --stack-name PrpUdacityServer  --template-body file://prp_udagram_server.yml    --parameters file://prp_udagram_server.json  --region=us-west-2
-aws cloudformation delete-stack --stack-name PrpUdacityServer  --region=us-west-2
+
+
+aws cloudformation create-stack --capabilities CAPABILITY_IAM --stack-name PrpUdacityStackIAM  --template-body file://prp_udagram_iam.yml    --parameters file://prp_udagram_server.json  --region=us-west-2
+aws cloudformation update-stack --capabilities CAPABILITY_IAM --stack-name PrpUdacityStackIAM  --template-body file://prp_udagram_iam.yml    --parameters file://prp_udagram_server.json  --region=us-west-2
+aws cloudformation delete-stack --stack-name PrpUdacityStackIAM  --region=us-west-2
+
+aws cloudformation create-stack --capabilities CAPABILITY_IAM --stack-name PrpUdacityStackAwf  --template-body file://prp_udagram_wafRule.yml    --parameters file://prp_udagram_server.json  --region=us-west-2
+aws cloudformation update-stack --capabilities CAPABILITY_IAM --stack-name PrpUdacityStackAwf  --template-body file://prp_udagram_wafRule.yml    --parameters file://prp_udagram_server.json  --region=us-west-2
+aws cloudformation delete-stack --stack-name PrpUdacityStackAwf  --region=us-west-2
+
+
+aws cloudformation create-stack --capabilities CAPABILITY_IAM --stack-name PrpUdacityStackServer  --template-body file://prp_udagram_server.yml    --parameters file://prp_udagram_server.json  --region=us-west-2
+aws cloudformation update-stack --capabilities CAPABILITY_IAM --stack-name PrpUdacityStackServer  --template-body file://prp_udagram_server.yml    --parameters file://prp_udagram_server.json  --region=us-west-2
+aws cloudformation delete-stack --stack-name PrpUdacityStackServer --region=us-west-2
+
+aws cloudformation create-stack --capabilities CAPABILITY_IAM --stack-name PrpUdacityStackS3  --template-body file://prp_udagram_S3.yml    --parameters file://prp_udagram_S3.json  --region=us-west-2
+aws cloudformation update-stack --capabilities CAPABILITY_IAM --stack-name PrpUdacityStackS3  --template-body file://prp_udagram_S3.yml    --parameters file://prp_udagram_S3.json  --region=us-west-2
+aws cloudformation delete-stack --stack-name PrpUdacityStackS3 --region=us-west-2
+
+
+aws cloudformation create-stack --capabilities CAPABILITY_IAM --stack-name PrpUdacityStackSSH  --template-body file://prp_udagram_serverSSH.yml    --parameters file://prp_udagram_serverSSH.json  --region=us-west-2
+aws cloudformation update-stack --capabilities CAPABILITY_IAM --stack-name PrpUdacityStackSSH  --template-body file://prp_udagram_serverSSH.yml    --parameters file://prp_udagram_serverSSH.json  --region=us-west-2
+aws cloudformation delete-stack --stack-name PrpUdacityStackSSH --region=us-west-2
