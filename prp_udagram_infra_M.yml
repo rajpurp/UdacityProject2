@@ -76,11 +76,11 @@
       ElasticLoadBalTargetGroup:
         Type: AWS::ElasticLoadBalancingV2::TargetGroup
         Properties:
-          HealthCheckIntervalSeconds: 15
+          HealthCheckIntervalSeconds: 10
           HealthCheckPath: /
           HealthCheckProtocol: HTTP
-          HealthCheckTimeoutSeconds: 10
-          HealthyThresholdCount: 4
+          HealthCheckTimeoutSeconds: 8
+          HealthyThresholdCount: 2
           Port: 80
           Protocol: HTTP
           VpcId: 
@@ -91,8 +91,8 @@
         Type: AWS::ElasticLoadBalancingV2::LoadBalancer
         Properties:
           Subnets:
-          - Fn::ImportValue: !Sub "${EnvName}-PUB1-SN"
-          - Fn::ImportValue: !Sub "${EnvName}-PUB2-SN"
+          - Fn::ImportValue: !Sub "${EnvName}-PUB-SUBNET-1"
+          - Fn::ImportValue: !Sub "${EnvName}-PUB-SUBNET-2"
           SecurityGroups:
           - Ref: SecGroupLoadBal
 
@@ -147,12 +147,13 @@
             Ebs:
               VolumeSize: '10'
               
+              
       WebAppAutoScalingGroup:
         Type: AWS::AutoScaling::AutoScalingGroup
         Properties:
           VPCZoneIdentifier:
           - Fn::ImportValue: 
-              !Sub "${EnvName}-PRIV-NETS"
+              !Sub "${EnvName}-PRIV-SUBNETS"
           LaunchConfigurationName:
             Ref: MyUdagramLaunchConfig
           MinSize: '4'

@@ -36,3 +36,52 @@ aws cloudformation delete-stack --stack-name PrpUdacityStackS3 --region=us-west-
 aws cloudformation create-stack --capabilities CAPABILITY_IAM --stack-name PrpUdacityStackSSH  --template-body file://prp_udagram_serverSSH.yml    --parameters file://prp_udagram_serverSSH.json  --region=us-west-2
 aws cloudformation update-stack --capabilities CAPABILITY_IAM --stack-name PrpUdacityStackSSH  --template-body file://prp_udagram_serverSSH.yml    --parameters file://prp_udagram_serverSSH.json  --region=us-west-2
 aws cloudformation delete-stack --stack-name PrpUdacityStackSSH --region=us-west-2
+
+############################
+
+aws cloudformation create-stack --stack-name PrpUdacityInfraStack  --template-body file://prp_udagram_infra_M.yml    --parameters file://prp_udagram_infra_M.json  --region=us-west-2
+aws cloudformation update-stack --stack-name PrpUdacityInfraStack  --template-body file://prp_udagram_infra_M.yml    --parameters file://prp_udagram_infra_M.json  --region=us-west-2
+aws cloudformation delete-stack --stack-name PrpUdacityInfraStack  --region=us-west-2
+
+
+
+###########################
+
+aws cloudformation create-stack --stack-name PrpUdacityStack  --template-body file://prp_udagram_infra.YML    --parameters file://prp_udagram_infra.json  --region=us-west-2
+aws cloudformation update-stack --stack-name PrpUdacityStack  --template-body file://prp_udagram_infra.YML    --parameters file://prp_udagram_infra.json  --region=us-west-2
+aws cloudformation delete-stack --stack-name PrpUdacityStack  --region=us-west-2
+
+aws cloudformation create-stack --stack-name PrpUdacityServerStack2  --template-body file://prp_udagram_server2.yml    --parameters file://prp_udagram_server2.json --capabilities CAPABILITY_IAM  --region=us-west-2
+aws cloudformation update-stack --stack-name PrpUdacityServerStack2  --template-body file://prp_udagram_server2.yml    --parameters file://prp_udagram_server2.json --capabilities CAPABILITY_IAM  --region=us-west-2
+aws cloudformation delete-stack --stack-name PrpUdacityServerStack2  --region=us-west-2
+
+##########################
+aws cloudformation create-stack --stack-name PrpUdacityServerStack  --template-body file://prp_udagram_server_M.yml    --parameters file://prp_udagram_server_M.json  --capabilities CAPABILITY_IAM --region=us-west-2
+aws cloudformation update-stack --stack-name PrpUdacityServerStack  --template-body file://prp_udagram_server_M.yml    --parameters file://prp_udagram_server_M.json  --capabilities CAPABILITY_IAM --region=us-west-2
+aws cloudformation delete-stack --stack-name PrpUdacityServerStack --region=us-west-2
+
+aws cloudformation create-stack --stack-name PrpUdacityInfraStack3  --template-body file://network.yml    --parameters file://network-param.json --region=us-west-2
+aws cloudformation update-stack --stack-name PrpUdacityInfraStack3  --template-body file://network.yml    --parameters file://network-param.json  --region=us-west-2
+aws cloudformation delete-stack --stack-name PrpUdacityInfraStack3  --region=us-west-2
+
+aws cloudformation create-stack --stack-name PrpUdacityServerStack3  --template-body file://servers.yml    --parameters file://server-param.json  --capabilities CAPABILITY_IAM --region=us-west-2
+aws cloudformation update-stack --stack-name PrpUdacityServerStack3  --template-body file://servers.yml    --parameters file://server-param.json  --capabilities CAPABILITY_IAM  --region=us-west-2
+aws cloudformation delete-stack --stack-name PrpUdacityServerStack3 --region=us-west-3
+
+##################
+
+aws cloudformation create-stack --stack-name PrpUdacityInfraStack  --template-body file://Prakash_network.yml    --parameters file://Prakash_network_param.json  --capabilities CAPABILITY_IAM --region=us-west-2 --region=us-west-2
+aws cloudformation update-stack --stack-name PrpUdacityInfraStack  --template-body file://Prakash_network.yml    --parameters file://Prakash_network_param.json  --capabilities CAPABILITY_IAM --region=us-west-2
+aws cloudformation delete-stack --stack-name PrpUdacityInfraStack  --region=us-west-2
+
+aws cloudformation create-stack --stack-name PrpUdacityServerStack  --template-body file://Prakash_server.yml    --parameters file://Prakash_server_param.json  --capabilities CAPABILITY_IAM --region=us-west-2
+aws cloudformation update-stack --stack-name PrpUdacityServerStack  --template-body file://Prakash_server.yml    --parameters file://Prakash_server_param.json  --capabilities CAPABILITY_IAM --region=us-west-2
+aws cloudformation delete-stack --stack-name PrpUdacityServerStack  --region=us-west-2
+
+./create.sh PrpUdacityInfraStack Prakash_network.yml  Prakash_network_param.json
+./update.sh PrpUdacityInfraStack Prakash_network.yml  Prakash_network_param.json
+./delete.sh PrpUdacityInfraStack 
+
+./create.sh PrpUdacityServerStack Prakash_server.yml  Prakash_server_param.json
+./update.sh PrpUdacityServerStack Prakash_server.yml  Prakash_server_param.json
+./delete.sh PrpUdacityServerStack 

@@ -1,6 +1,6 @@
 [
 	{
-		"ParameterKey": "EnvironmentName",
-		"ParameterValue": "PrpUdacityProjectTwo"
+		"ParameterKey": "EnvName",
+		"ParameterValue": "PrpUdacityProject"
 	}
 ]
