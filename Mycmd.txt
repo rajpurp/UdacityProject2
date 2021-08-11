@@ -85,3 +85,5 @@ aws cloudformation delete-stack --stack-name PrpUdacityServerStack  --region=us-
 ./create.sh PrpUdacityServerStack Prakash_server.yml  Prakash_server_param.json
 ./update.sh PrpUdacityServerStack Prakash_server.yml  Prakash_server_param.json
 ./delete.sh PrpUdacityServerStack 
+
+updated from cloud9.9
